@@ -7,6 +7,9 @@ external_components:
       path: custom_components
 
 # Example configuration entry
+climate:
+  - platform: electrolux_climate
+    name: test
 binary_sensor:
   - platform: empty_binary_sensor
     name: Empty binary sensor
