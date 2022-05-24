@@ -1,0 +1,38 @@
+esphome:
+  name: aireacondicionado
+
+external_components:
+  - source:
+      type: local
+      path: custom_components
+
+# Example configuration entry
+binary_sensor:
+  - platform: empty_binary_sensor
+    name: Empty binary sensor
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: ""
+
+ota:
+  password: ""
+
+wifi:
+  ssid: "Gifi"
+  password: !secret "wifi"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Aireacondicionado"
+    password: !secret "ap"
+
+captive_portal:
