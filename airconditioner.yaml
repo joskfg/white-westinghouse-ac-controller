@@ -7,12 +7,14 @@ external_components:
       path: custom_components
 
 # Example configuration entry
+
+remote_transmitter:
+  pin: GPIO15
+  carrier_duty_percent: 100%
+
 climate:
   - platform: electrolux_climate
     name: "aire acondicionado"
-#binary_sensor:
-#  - platform: empty_binary_sensor
-#    name: Empty binary sensor
 
 esp32:
   board: nodemcu-32s

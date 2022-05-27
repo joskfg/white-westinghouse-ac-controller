@@ -1,178 +1,155 @@
 #include "esphome/core/log.h"
 #include "electrolux_climate.h"
-#include "Arduino.h"
 
 namespace esphome {
 namespace electrolux_climate {
 
-#define Num_Samples  112   //  number of dample of signal
-#define MaxWaveTypes 4   // types of wave (signal)
-int i = 0;
+uint8_t ElectroluxClimate::operation_mode_() {
+  uint8_t operating_mode = 0;
+  switch (this->mode) {
+    case climate::CLIMATE_MODE_COOL:
+      return ELECTROLUX_MODE_COOL;
+      break;
+    case climate::CLIMATE_MODE_HEAT:
+      return ELECTROLUX_MODE_HEAT;
+      break;
+    case climate::CLIMATE_MODE_HEAT_COOL:
+      return ELECTROLUX_MODE_AUTO;
+      break;
+    case climate::CLIMATE_MODE_DRY:
+      return ELECTROLUX_MODE_DRY;
+      break;
+    case climate::CLIMATE_MODE_FAN_ONLY:
+    case climate::CLIMATE_MODE_OFF:
+    default:
+      return ELECTROLUX_MODE_FAN;
+      break;
+  }
+}
 
-static byte WaveFormTable[MaxWaveTypes][Num_Samples] = {
-   // Sin wave
-   { 
-    0x80, 0x83, 0x87, 0x8A, 0x8E, 0x91, 0x95, 0x98, 0x9B, 0x9E, 0xA2, 0xA5, 0xA7, 0xAA, 0xAD, 0xAF,
-    0xB2, 0xB4, 0xB6, 0xB8, 0xB9, 0xBB, 0xBC, 0xBD, 0xBE, 0xBF, 0xBF, 0xBF, 0xC0, 0xBF, 0xBF, 0xBF,
-    0xBE, 0xBD, 0xBC, 0xBB, 0xB9, 0xB8, 0xB6, 0xB4, 0xB2, 0xAF, 0xAD, 0xAA, 0xA7, 0xA5, 0xA2, 0x9E,
-    0x9B, 0x98, 0x95, 0x91, 0x8E, 0x8A, 0x87, 0x83, 0x80, 0x7C, 0x78, 0x75, 0x71, 0x6E, 0x6A, 0x67,
-    0x64, 0x61, 0x5D, 0x5A, 0x58, 0x55, 0x52, 0x50, 0x4D, 0x4B, 0x49, 0x47, 0x46, 0x44, 0x43, 0x42,
-    0x41, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x41, 0x42, 0x43, 0x44, 0x46, 0x47, 0x49, 0x4B,
-    0x4D, 0x50, 0x52, 0x55, 0x58, 0x5A, 0x5D, 0x61, 0x64, 0x67, 0x6A, 0x6E, 0x71, 0x75, 0x78, 0x7C
-   },
-   // Triangular wave table
-   {
-     0x80, 0x84, 0x89, 0x8D, 0x92, 0x96, 0x9B, 0x9F, 0xA4, 0xA8, 0xAD, 0xB2, 0xB6, 0xBB, 0xBF, 0xC4,
-     0xC8, 0xCD, 0xD1, 0xD6, 0xDB, 0xDF, 0xE4, 0xE8, 0xED, 0xF1, 0xF6, 0xFA, 0xFF, 0xFA, 0xF6, 0xF1,
-     0xED, 0xE8, 0xE4, 0xDF, 0xDB, 0xD6, 0xD1, 0xCD, 0xC8, 0xC4, 0xBF, 0xBB, 0xB6, 0xB2, 0xAD, 0xA8,
-     0xA4, 0x9F, 0x9B, 0x96, 0x92, 0x8D, 0x89, 0x84, 0x7F, 0x7B, 0x76, 0x72, 0x6D, 0x69, 0x64, 0x60,
-     0x5B, 0x57, 0x52, 0x4D, 0x49, 0x44, 0x40, 0x3B, 0x37, 0x32, 0x2E, 0x29, 0x24, 0x20, 0x1B, 0x17,
-     0x12, 0x0E, 0x09, 0x05, 0x00, 0x05, 0x09, 0x0E, 0x12, 0x17, 0x1B, 0x20, 0x24, 0x29, 0x2E, 0x32,
-     0x37, 0x3B, 0x40, 0x44, 0x49, 0x4D, 0x52, 0x57, 0x5B, 0x60, 0x64, 0x69, 0x6D, 0x72, 0x76, 0x7B
-  },
+uint8_t ElectroluxClimate::fan_speed_() {
+  switch (this->fan_mode.value()) {
+    case climate::CLIMATE_FAN_LOW:
+      return ELECTROLUX_FAN_LOW;
+      break;
+    case climate::CLIMATE_FAN_MEDIUM:
+      return ELECTROLUX_FAN_MEDIUM;
+      break;
+    case climate::CLIMATE_FAN_HIGH:
+      return ELECTROLUX_FAN_HIGH;
+      break;
+    case climate::CLIMATE_FAN_AUTO:
+    default:
+      return ELECTROLUX_FAN_AUTO;
+  }
+}
 
-   // Sawtooth wave table
-   {
-     0x00, 0x02, 0x04, 0x06, 0x09, 0x0B, 0x0D, 0x10, 0x12, 0x14, 0x16, 0x19, 0x1B, 0x1D, 0x20, 0x22,
-     0x24, 0x27, 0x29, 0x2B, 0x2D, 0x30, 0x32, 0x34, 0x37, 0x39, 0x3B, 0x3E, 0x40, 0x42, 0x44, 0x47,
-     0x49, 0x4B, 0x4E, 0x50, 0x52, 0x54, 0x57, 0x59, 0x5B, 0x5E, 0x60, 0x62, 0x65, 0x67, 0x69, 0x6B, 
-     0x6E, 0x70, 0x72, 0x75, 0x77, 0x79, 0x7C, 0x7E, 0x80, 0x82, 0x85, 0x87, 0x89, 0x8C, 0x8E, 0x90,
-     0x93, 0x95, 0x97, 0x99, 0x9C, 0x9E, 0xA0, 0xA3, 0xA5, 0xA7, 0xA9, 0xAC, 0xAE, 0xB0, 0xB3, 0xB5,
-     0xB7, 0xBA, 0xBC, 0xBE, 0xC0, 0xC3, 0xC5, 0xC7, 0xCA, 0xCC, 0xCE, 0xD1, 0xD3, 0xD5, 0xD7, 0xDA,
-     0xDC, 0xDE, 0xE1, 0xE3, 0xE5, 0xE8, 0xEA, 0xEC, 0xEE, 0xF1, 0xF3, 0xF5, 0xF8, 0xFA, 0xFC, 0xFE
-   },
-   // Square wave table
-   {
-     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-   }
-};
-
-const uint8_t CLK_PIN = 16;
-const uint8_t DATA_PIN = 17;
-const uint64_t CLK_PIN_MASK = 1 << CLK_PIN;
-const uint64_t DATA_PIN_MASK = 1 << DATA_PIN;
-
-void ElectroluxClimate::setup() {
-  this->mode = climate::CLIMATE_MODE_OFF;
-  this->target_temperature = 20.0f;
-  this->fan_mode = climate::CLIMATE_FAN_AUTO;
-  this->communication_ = new Communication();
-  this->communication_->setup();
+uint8_t ElectroluxClimate::temperature_() {
+  // set temparature from 1 to 15 instead of 16 to 30.
+  uint8_t temp_offset = 15;
+  return (uint8_t) roundf(this->target_temperature) - temp_offset;
 }
 
 void ElectroluxClimate::control(const climate::ClimateCall &call) {
-  if (call.get_mode().has_value()) {
-    // User requested mode change
-    climate::ClimateMode mode = *call.get_mode();
+  this->was_on_ = this->mode != climate::CLIMATE_MODE_OFF;
+  climate_ir::ClimateIR::control(call);
+}
 
-    // Send mode to hardware
-    this->communication_->send(mode, this->target_temperature, this->fan_mode);
+void ElectroluxClimate::transmit_state() {
+  auto transmit = this->transmitter_->transmit();
 
-    // Publish updated state
-    this->mode = mode;
-    this->publish_state();
+  transmit.set_send_times(2);
+
+  auto *data = transmit.get_data();
+
+  // Header
+  data->mark(ELECTROLUX_BIT_SIZE * 3);
+  data->space(ELECTROLUX_BIT_SIZE * 3);
+
+  // Turn on/off
+  if((this->was_on_ && this->mode == climate::CLIMATE_MODE_OFF) || (!this->was_on_ && this->mode != climate::CLIMATE_MODE_OFF)) {
+    data->space(ELECTROLUX_BIT_SIZE);
+    data->mark(ELECTROLUX_BIT_SIZE);
+  } else {
+    data->mark(ELECTROLUX_BIT_SIZE);
+    data->space(ELECTROLUX_BIT_SIZE);
   }
-  if (call.get_target_temperature().has_value()) {
-    // User requested target temperature change
-    float temp = *call.get_target_temperature();
 
-    // Send target temp to climate
-    this->communication_->send(this->mode, temp, this->fan_mode);
-
-    this->target_temperature = temp;
-    this->publish_state();
-  }
-  if (call.get_fan_mode().has_value()) {
-    // User requested fan mode change
-    climate::ClimateFanMode fan_mode = *call.get_fan_mode();
-
-    // Send fan mode to climate
-    this->communication_->send(this->mode, this->target_temperature, fan_mode);
-
-    this->fan_mode = fan_mode;
-    this->publish_state();
-  }
-}
-
-climate::ClimateTraits ElectroluxClimate::traits() {
-  // The capabilities of the climate device
-  auto traits = climate::ClimateTraits();
-  
-  traits.set_supported_modes({
-    climate::CLIMATE_MODE_OFF,
-    climate::CLIMATE_MODE_HEAT_COOL,
-    climate::CLIMATE_MODE_COOL,
-    climate::CLIMATE_MODE_HEAT,
-    climate::CLIMATE_MODE_FAN_ONLY,
-    climate::CLIMATE_MODE_DRY,
-  });
-  traits.set_supported_fan_modes({
-    climate::CLIMATE_FAN_AUTO,
-    climate::CLIMATE_FAN_LOW,
-    climate::CLIMATE_FAN_MEDIUM,
-    climate::CLIMATE_FAN_HIGH,
-  });
-  traits.set_visual_min_temperature(16.0f);
-  traits.set_visual_max_temperature(30.0f);
-  traits.set_visual_temperature_step(1.0f);
-
-  return traits;
-}
-
-hw_timer_t * clk_timer = NULL;
-
-void restoreClk() {
-  GPIO.out_w1tc = CLK_PIN_MASK;
-  GPIO.out_w1ts = CLK_PIN_MASK;
-}
-
-void Communication::setup() {
-  setCpuFrequencyMhz(240);
-  //pinMode(CLK_PIN, OUTPUT);
-  //digitalWrite(CLK_PIN, HIGH);
-
-  //pinMode(DATA_PIN, OUTPUT);
-  //digitalWrite(CLK_PIN, LOW);
-
-  //Configuracion de los gpios
-  //gpio_config_t io_conf;
- 
-  //Colocamos como OUTPUT
-  //io_conf.mode = GPIO_MODE_OUTPUT;
-
-  // Pines a activar
-  //io_conf.pin_bit_mask = CLK_PIN_MASK | DATA_PIN_MASK;
-
-  //Aplica la configuracion
-  //gpio_config(&io_conf);
-
-  //GPIO.out_w1tc = DATA_PIN_MASK;
-  //GPIO.out_w1ts = CLK_PIN_MASK;
-
-}
-
-void Communication::send(climate::ClimateMode mode, float temperature, optional<climate::ClimateFanMode> fan_mode) {
-    //Máscara de bits com os pinos serão desativados (clear)
-    //GPIO.out_w1tc = CLK_PIN_MASK;
-    //for(int i=0; i < 260; i++) {
-    //  NOP();
-    //}
-    //GPIO.out_w1ts = DATA_PIN_MASK | CLK_PIN_MASK;
-    //Máscara de bits com os pinos que serão "setados" como ativos    
-
-    for(int i=0; i < Num_Samples; i++) {
-      dacWrite(25, WaveFormTable[3][i]);
+  // Operation Mode
+  uint8_t operating_mode = this->operation_mode_();
+  // loop through the bits of the operating mode
+  for (uint8_t i = 0; i < 3; i++) {
+    uint8_t mask = 1 << i;
+    if (operating_mode & mask) {
+      data->space(ELECTROLUX_BIT_SIZE);
+      data->mark(ELECTROLUX_BIT_SIZE);
+    } else {
+      data->mark(ELECTROLUX_BIT_SIZE);
+      data->space(ELECTROLUX_BIT_SIZE);
     }
+  }
 
-    ESP_LOGD("custom", "Mode: %s", climate_mode_to_string(mode));
-    ESP_LOGD("custom", "Target temperature: %.1f", temperature);
-    ESP_LOGD("custom", "Fan mode: %s", climate_fan_mode_to_string(*fan_mode));
+  // Fan Speed
+  uint8_t fan_speed = this->fan_speed_();
+  // loop through the bits of the fan speed
+  for (uint8_t i = 0; i < 3; i++) {
+    uint8_t mask = 1 << i;
+    if (fan_speed & mask) {
+      data->space(ELECTROLUX_BIT_SIZE);
+      data->mark(ELECTROLUX_BIT_SIZE);
+    } else {
+      data->mark(ELECTROLUX_BIT_SIZE);
+      data->space(ELECTROLUX_BIT_SIZE);
+    }
+  }
+
+  // Empty data
+  data->mark(ELECTROLUX_BIT_SIZE);
+  data->space(ELECTROLUX_BIT_SIZE);
+  data->mark(ELECTROLUX_BIT_SIZE);
+  data->space(ELECTROLUX_BIT_SIZE);
+
+  // I feel (I always don't feel)
+  data->mark(ELECTROLUX_BIT_SIZE);
+  data->space(ELECTROLUX_BIT_SIZE);
+
+  // Temperature
+  uint8_t temperature = this->temperature_();
+  ESP_LOGI("ElectroluxClimate", "Temperature: %d", this->target_temperature);
+  ESP_LOGI("ElectroluxClimate", "Adapted Temperature: %d", temperature);
+  // loop through the bits of the temperature
+  for (uint8_t i = 4; i > 0; i--) {
+    uint8_t mask = 1 << i-1;
+    if (temperature & mask) {
+      ESP_LOGI("ElectroluxClimate", "Temperature bits: %d -> 1", i-1);
+      data->space(ELECTROLUX_BIT_SIZE);
+      data->mark(ELECTROLUX_BIT_SIZE);
+    } else {
+      ESP_LOGI("ElectroluxClimate", "Temperature bits: %d -> 0", i-1);
+      data->mark(ELECTROLUX_BIT_SIZE);
+      data->space(ELECTROLUX_BIT_SIZE);
+    }
+  }
+
+  for(uint8_t i = 0; i < 18; i++) {
+    data->mark(ELECTROLUX_BIT_SIZE);
+    data->space(ELECTROLUX_BIT_SIZE);
+  }
+
+  // Triplicate data vector contatenating initial information
+  std::vector<int32_t> vector = data->get_data();
+  std::vector<int32_t> new_vector;
+  for(uint8_t i = 0; i < 3; i++) {
+    for(uint8_t j = 0; j < vector.size(); j++) {
+      new_vector.push_back(vector[j]);
+    }
+  }
+
+  data->set_data(new_vector);
+  data->mark(ELECTROLUX_BIT_SIZE * 4);
+  data->space(ELECTROLUX_BIT_SIZE * 30);
+
+  transmit.perform();
 }
 
 } //namespace electrolux_climate
