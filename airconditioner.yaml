@@ -32,12 +32,12 @@ ota:
   password: ""
 
 wifi:
-  ssid: "Gifi"
-  password: !secret "wifi"
+  ssid: !secret "wifi-ssid"
+  password: !secret "wifi-pass"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: "Aireacondicionado"
-    password: !secret "ap"
+    ssid: !secret "ap-ssid"
+    password: !secret "ap-pass"
 
 captive_portal:
