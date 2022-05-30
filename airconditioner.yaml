@@ -1,5 +1,7 @@
 esphome:
-  name: aireacondicionado
+  name: aireacondicionado-esp12f
+  platform: ESP8266
+  board: nodemcuv2
 
 external_components:
   - source:
@@ -9,17 +11,17 @@ external_components:
 # Example configuration entry
 
 remote_transmitter:
-  pin: GPIO15
+  pin: GPIO5
   carrier_duty_percent: 100%
 
 climate:
   - platform: electrolux_climate
     name: "aire acondicionado"
 
-esp32:
-  board: nodemcu-32s
-  framework:
-    type: arduino
+#esp32:
+#  board: nodemcu-32s
+#  framework:
+#    type: arduino
 
 # Enable logging
 logger:
