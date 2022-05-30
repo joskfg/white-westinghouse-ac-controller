@@ -6,8 +6,8 @@ namespace esphome {
 namespace electrolux_climate {
 
 // Temperature
-const uint8_t ELECTROLUX_TEMP_MIN = 20; // Celsius
-const uint8_t ELECTROLUX_TEMP_MAX = 30; // Celsius
+const uint8_t ELECTROLUX_TEMP_MIN = 16.0f; // Celsius
+const uint8_t ELECTROLUX_TEMP_MAX = 30.0f; // Celsius
 const uint8_t ELECTROLUX_TEMP_STEP = 1.0f; // Celsius
 
 // Modes
@@ -18,10 +18,10 @@ const uint8_t ELECTROLUX_MODE_DRY = 0b100;
 const uint8_t ELECTROLUX_MODE_FAN = 0b101;
 
 // Fan Speed
-const uint8_t ELECTROLUX_FAN_LOW    = 0b00;
-const uint8_t ELECTROLUX_FAN_MEDIUM = 0b01;
-const uint8_t ELECTROLUX_FAN_HIGH   = 0b10;
-const uint8_t ELECTROLUX_FAN_AUTO   = 0b11;
+const uint8_t ELECTROLUX_FAN_LOW    = 0b000;
+const uint8_t ELECTROLUX_FAN_MEDIUM = 0b010;
+const uint8_t ELECTROLUX_FAN_HIGH   = 0b100;
+const uint8_t ELECTROLUX_FAN_AUTO   = 0b110;
 
 // Serial Transmission
 const uint32_t ELECTROLUX_BIT_SIZE = 976;

@@ -70,20 +70,23 @@ void ElectroluxClimate::transmit_state() {
   if((this->was_on_ && this->mode == climate::CLIMATE_MODE_OFF) || (!this->was_on_ && this->mode != climate::CLIMATE_MODE_OFF)) {
     data->space(ELECTROLUX_BIT_SIZE);
     data->mark(ELECTROLUX_BIT_SIZE);
-  } else {
+  } else { // No turn/on/off
     data->mark(ELECTROLUX_BIT_SIZE);
     data->space(ELECTROLUX_BIT_SIZE);
   }
 
   // Operation Mode
   uint8_t operating_mode = this->operation_mode_();
+  ESP_LOGD("ElectroluxClimate", "Operating mode: %d", operating_mode);
   // loop through the bits of the operating mode
-  for (uint8_t i = 0; i < 3; i++) {
-    uint8_t mask = 1 << i;
+  for (uint8_t i = 3; i > 0; i--) {
+    uint8_t mask = 1 << (i-1);
     if (operating_mode & mask) {
+      ESP_LOGD("ElectroluxClimate", "Operating mode bits: %d -> 1", i-1);
       data->space(ELECTROLUX_BIT_SIZE);
       data->mark(ELECTROLUX_BIT_SIZE);
     } else {
+      ESP_LOGD("ElectroluxClimate", "Operating mode bits: %d -> 0", i-1);
       data->mark(ELECTROLUX_BIT_SIZE);
       data->space(ELECTROLUX_BIT_SIZE);
     }
@@ -92,12 +95,15 @@ void ElectroluxClimate::transmit_state() {
   // Fan Speed
   uint8_t fan_speed = this->fan_speed_();
   // loop through the bits of the fan speed
-  for (uint8_t i = 0; i < 3; i++) {
-    uint8_t mask = 1 << i;
+  ESP_LOGD("ElectroluxClimate", "Fan speed: %d", fan_speed);
+  for (uint8_t i = 3; i > 0; i--) {
+    uint8_t mask = 1 << (i-1);
     if (fan_speed & mask) {
+      ESP_LOGD("ElectroluxClimate", "Fan speed bits: %d -> 1", i-1);
       data->space(ELECTROLUX_BIT_SIZE);
       data->mark(ELECTROLUX_BIT_SIZE);
     } else {
+      ESP_LOGD("ElectroluxClimate", "Fan speed bits: %d -> 0", i-1);
       data->mark(ELECTROLUX_BIT_SIZE);
       data->space(ELECTROLUX_BIT_SIZE);
     }
@@ -115,17 +121,17 @@ void ElectroluxClimate::transmit_state() {
 
   // Temperature
   uint8_t temperature = this->temperature_();
-  ESP_LOGI("ElectroluxClimate", "Temperature: %d", this->target_temperature);
-  ESP_LOGI("ElectroluxClimate", "Adapted Temperature: %d", temperature);
+  ESP_LOGD("ElectroluxClimate", "Temperature: %d", this->target_temperature);
+  ESP_LOGD("ElectroluxClimate", "Adapted Temperature: %d", temperature);
   // loop through the bits of the temperature
   for (uint8_t i = 4; i > 0; i--) {
-    uint8_t mask = 1 << i-1;
+    uint8_t mask = 1 << (i-1);
     if (temperature & mask) {
-      ESP_LOGI("ElectroluxClimate", "Temperature bits: %d -> 1", i-1);
+      ESP_LOGD("ElectroluxClimate", "Temperature bits: %d -> 1", i-1);
       data->space(ELECTROLUX_BIT_SIZE);
       data->mark(ELECTROLUX_BIT_SIZE);
     } else {
-      ESP_LOGI("ElectroluxClimate", "Temperature bits: %d -> 0", i-1);
+      ESP_LOGD("ElectroluxClimate", "Temperature bits: %d -> 0", i-1);
       data->mark(ELECTROLUX_BIT_SIZE);
       data->space(ELECTROLUX_BIT_SIZE);
     }
