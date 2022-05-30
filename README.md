@@ -1,4 +1,4 @@
-**Do this at your own risk and only if you know what you're doing, I'm not responsible for any damages that could happen. It worked for me but in your case voltages could be different or even the wiring.**
+# Do this at your own risk and only if you know what you're doing, I'm not responsible for any damages that could happen. It worked for me but in your case voltages could be different or even the wiring.
 
 # White-WestingHouse (Electra/Electrolux) Climate
 
