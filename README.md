@@ -42,8 +42,9 @@ To inspect the signal send from the RC to the communication interface, I've got 
 
 With this I plugged the Green wire and GND to the logic analyzer and got several signals with the different RC options. [There is a capture with time markers explaining each signal part in this repository](./custom_components/electrolux_climate/protocol/18%20degrees%20-%20annotated.sal) that you can open with the [salaee program](https://www.saleae.com). You have all the captures taht I used in the [protocol folder](./custom_components/electrolux_climate/protocol/).
 
-The data is send twice with a delay in between them and each frame constains the same data three times.
+The data is send twice with a delay in between them
 ![Repeated signal](./assets/repeated_signal.png)
+and each frame constains the same data three times.
 ![Repeated data](./assets/repated_data.png)
 
 So we are going to analyze the differences between the different captures. Each captura has only one change, so the change in the signal is obvious. After checking a few captures we get that:
