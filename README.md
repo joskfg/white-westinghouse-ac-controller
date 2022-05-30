@@ -25,8 +25,9 @@ I opened the RC/W controller to try to figure out what is each communication cab
 With this, we now that the brown and blue cables are being used to power the led in the RC. The black cable should be a GND and it is. So we have two remaining wires, blue and green. After checking the voltages we get that the blue is always at high level (5V) while the green is always at a low level (0V). Furtheremore if you disconnects the blue wire, and powers the RC with an alternative 5V supply the RC works, so it is the power supply for the RC (It has two AAA batteries too). With this the only wire that could send the data is the green one.
 
 In summary
+
 | Wire Color | Purpose |
-------------------------
+|------------|---------|
 | Red        | LED +   |
 | Brown      | LED -   |
 | Black      | GND -   |
@@ -58,7 +59,7 @@ With this rules we get that the data payload contains (ignoring header) has 32 b
 The payload follows the next structure:
 
 | Letter | Meaning                                                                |
------------------------------------------------------------------------------------
+|--------|------------------------------------------------------------------------|
 | S      | Indicates if turn on/off or do nothing                                 |
 | M      | AC Mode (Auto, Cool, Heat, Fan or Dry)                                 |
 | F      | Fan speed (Low, Medium, High or Auto)                                  |
@@ -75,7 +76,7 @@ With this we just need to know the values for each feature that can be easily de
 #### Turn on/off
 
 | Feature       | Bit mask |
-----------------------------
+|---------------|----------|
 | Switch ON/OFF | 1        |
 | Do Nothing    | 0        |
 
@@ -83,7 +84,7 @@ With this we just need to know the values for each feature that can be easily de
 #### AC Modes
 
 | Feature       | Bit mask |
-----------------------------
+|---------------|----------|
 | Cool          |      001 |
 | Heat          |      010 |
 | Auto          |      011 |
@@ -93,7 +94,7 @@ With this we just need to know the values for each feature that can be easily de
 #### I feel system
 
 | Feature  | Bit mask |
------------------------
+|----------|----------|
 | Enabled  |        1 |
 | Disabled |        0 |
 
@@ -104,7 +105,7 @@ The temperature goes from 16 to 30 and is send from 1 to 16, so we just need to 
 It is important to represent it with 4 bits.
 
 | Feature  | Bit mask |
------------------------
+|----------|----------|
 | 16       |     0001 |
 | 17       |     0010 |
 | 18       |     0011 |
