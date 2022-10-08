@@ -154,4 +154,32 @@ Another thing is that I didn't used the led signal to know if the LED is on or o
 
 There is no OFF AC mode in the RC, so I invented one that is controlled by ESP8266, so if it is set to off, it turns off the AC but if the AC mode is different it turns ON the AC.
 
-Finally you can use ESP32 or ESP8266 in your setup. I used ESP32 for developing nad finally using a ESP8266 in the final solution because it is smaller and the first approach was to encapsulate it inside the RC.
+Finally you can use ESP32 or ESP8266 in your setup. I used ESP32 for developing nad finally using a ESP8266 in the final solution because it is smaller and the first approach was to encapsulate it inside the RC.a
+
+
+# How to burn your firmware
+
+## Configuring
+You need to create a configuration yaml like for example with the component configuration:
+```
+# Configuration example:
+external_components:
+  - source: github://joskfg/white-westinghouse-ac-controller
+
+remote_transmitter:
+  pin: GPIO5
+  carrier_duty_percent: 100%
+
+climate:
+  - platform: electrolux_climate
+    name: "aire acondicionado"
+```
+You can see a full example in [airconditioner.yaml](airconditioner.yaml)
+
+## Burning
+You can use docker or ESPHome to burn the firmware.
+
+Docker example:
+```
+docker run --rm -v "${PWD}":/config -it --network=host esphome/esphome run airconditioner.yaml
+```

@@ -67,7 +67,7 @@ void ElectroluxClimate::transmit_state() {
   data->space(ELECTROLUX_BIT_SIZE * 3);
 
   // Turn on/off
-  if((this->was_on_ && this->mode == climate::CLIMATE_MODE_OFF) || (!this->was_on_ && this->mode != climate::CLIMATE_MODE_OFF)) {
+  if((this->was_on_ && (this->mode == climate::CLIMATE_MODE_OFF || this->mode == climate::CLIMATE_MODE_FAN_ONLY)) || (!this->was_on_ && this->mode != climate::CLIMATE_MODE_OFF)) {
     data->space(ELECTROLUX_BIT_SIZE);
     data->mark(ELECTROLUX_BIT_SIZE);
   } else { // No turn/on/off
